@@ -1,38 +1,25 @@
-import express from "express";
 import fetch from "node-fetch";
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+const ODDS_API_KEY = process.env.ODDS_API_KEY; // ✅ stored in Railway variables
 
-app.get("/", (req, res) => {
-  res.json({ message: "✅ BTB Scraper is running" });
-});
-
-app.get("/odds", async (req, res) => {
+async function fetchOdds() {
   try {
-    res.json([
-      {
-        home_team: "Yankees",
-        away_team: "Red Sox",
-        bookmakers: [
-          {
-            markets: [
-              {
-                outcomes: [
-                  { name: "Yankees", price: 1.91 },
-                  { name: "Red Sox", price: 1.95 }
-                ]
-              }
-            ]
-          }
-        ]
-      }
-    ]);
-  } catch (err) {
-    res.status(500).json({ error: err.toString() });
-  }
-});
+    const url = `https://api.the-odds-api.com/v4/sports/upcoming/odds?regions=us,eu,uk,au&markets=h2h,spreads,totals&oddsFormat=american`;
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-});
+    const res = await fetch(url, {
+      headers: { "x-api-key": ODDS_API_KEY }
+    });
+
+    if (!res.ok) {
+      console.error("❌ OddsAPI failed:", res.status, await res.text());
+      return;
+    }
+
+    const data = await res.json();
+    console.log("✅ Got odds:", JSON.stringify(data, null, 2));
+  } catch (err) {
+    console.error("⚠️ Error fetching odds:", err);
+  }
+}
+
+fetchOdds();
