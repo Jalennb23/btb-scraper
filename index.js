@@ -1,25 +1,36 @@
+import express from "express";
 import fetch from "node-fetch";
 
-const ODDS_API_KEY = process.env.ODDS_API_KEY; // ✅ stored in Railway variables
+const app = express();
+const PORT = process.env.PORT || 3000;
 
-async function fetchOdds() {
+// Example route: fetch odds from Bovada JSON feed
+app.get("/bovada", async (req, res) => {
   try {
-    const url = `https://api.the-odds-api.com/v4/sports/upcoming/odds?regions=us,eu,uk,au&markets=h2h,spreads,totals&oddsFormat=american`;
-
-    const res = await fetch(url, {
-      headers: { "x-api-key": ODDS_API_KEY }
-    });
-
-    if (!res.ok) {
-      console.error("❌ OddsAPI failed:", res.status, await res.text());
-      return;
-    }
-
-    const data = await res.json();
-    console.log("✅ Got odds:", JSON.stringify(data, null, 2));
+    const response = await fetch("https://www.bovada.lv/services/sports/event/v2/events/A/description/baseball/mlb");
+    const data = await response.json();
+    res.json(data);
   } catch (err) {
-    console.error("⚠️ Error fetching odds:", err);
+    console.error("Error fetching Bovada odds:", err);
+    res.status(500).json({ error: "Failed to fetch Bovada odds" });
   }
-}
+});
 
-fetchOdds();
+// Example route: fetch odds from BetOnline (stub for now)
+app.get("/betonline", async (req, res) => {
+  try {
+    // placeholder, since BetOnline may require HTML scraping
+    res.json({ message: "BetOnline scraper coming soon" });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch BetOnline odds" });
+  }
+});
+
+// Root route
+app.get("/", (req, res) => {
+  res.json({ message: "✅ BTB Scraper is running!" });
+});
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
